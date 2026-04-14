@@ -95,7 +95,7 @@ jobs:
       - name: Checkout Deployment Repo
         uses: actions/checkout@v4
         with:
-          repository: <your-username>/deployment-repo
+          repository: Srinivasan26sirius-cdw/DevopsExercise6DeployRepo
           token: ${{ secrets.GH_PAT }}
 
       - name: Update image tag
