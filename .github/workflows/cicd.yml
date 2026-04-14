@@ -96,7 +96,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: <your-username>/deployment-repo
-          token: ${{ secrets.DEPLOY_REPO_TOKEN }}
+          token: ${{ secrets.GH_PAT }}
 
       - name: Update image tag
         run: |
@@ -105,7 +105,7 @@ jobs:
       - name: Create PR
         uses: peter-evans/create-pull-request@v6
         with:
-          token: ${{ secrets.DEPLOY_REPO_TOKEN }}
+          token: ${{ secrets.GH_PAT }}
           branch: update-image-${{ needs.docker.outputs.image_tag }}
           base: main
           commit-message: Update image tag
