@@ -1,0 +1,113 @@
+name: CI-CD Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  IMAGE_NAME: fastapi-app
+
+jobs:
+
+  # ─── Job runs only for pull requests to validate code and build Docker image ────────────────────────────────────────────────
+  test-and-build:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install -r requirements-test.txt
+
+      - name: Run tests
+        run: pytest
+
+      - name: Build Docker image for PR
+        run: docker build -t fastapi-app:pr-${{ github.event.pull_request.number }} .
+
+  # ─── Job runs on main branch to build and push Docker image, then update deployment repo ─────────────────────────────────────
+  build-test:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install -r requirements-test.txt
+
+      - name: Run tests
+        run: pytest
+
+
+  docker:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: build-test
+    runs-on: ubuntu-latest
+
+    outputs:
+      image_tag: ${{ steps.tag.outputs.tag }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Generate Image Tag
+        id: tag
+        run: echo "tag=$(date +%s)" >> $GITHUB_OUTPUT
+
+      - name: Login to DockerHub
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+      - name: Build Image
+        run: |
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/fastapi-app:${{ steps.tag.outputs.tag }} .
+
+      - name: Push Image
+        run: |
+          docker push ${{ secrets.DOCKER_USERNAME }}/fastapi-app:${{ steps.tag.outputs.tag }}
+
+  update-deploy-repo:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: docker
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Deployment Repo
+        uses: actions/checkout@v4
+        with:
+          repository: <your-username>/deployment-repo
+          token: ${{ secrets.DEPLOY_REPO_TOKEN }}
+
+      - name: Update image tag
+        run: |
+          sed -i "s|image: .*|image: ${{ secrets.DOCKER_USERNAME }}/fastapi-app:${{ needs.docker.outputs.image_tag }}|" k8s/deployment.yaml
+
+      - name: Create PR
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.DEPLOY_REPO_TOKEN }}
+          branch: update-image-${{ needs.docker.outputs.image_tag }}
+          base: main
+          commit-message: Update image tag
+          title: "Update Docker image"
+          body: "Auto-updated image version"
