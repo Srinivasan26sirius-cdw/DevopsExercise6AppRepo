@@ -101,7 +101,7 @@ jobs:
       - name: Update image tag
         run: |
           sed -i "s|image: .*|image: ${{ secrets.DOCKER_USERNAME }}/fastapi-app:${{ needs.docker.outputs.image_tag }}|" deployment.yaml
-          echo "Updated deployment.yaml with new image tag !"
+          echo "Updated deployment.yaml with new image tag !!!"
 
       - name: Create PR
         uses: peter-evans/create-pull-request@v6
