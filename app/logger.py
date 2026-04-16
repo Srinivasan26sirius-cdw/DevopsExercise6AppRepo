@@ -8,19 +8,23 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-def setup_loki_logger(name: str, loki_url: str = None):
+def setup_loki_logger(name: str, loki_url: str = None, service_name: str = None):
     """
     Configure a logger that sends logs to Loki.
     
     Args:
         name: Logger name
         loki_url: Loki endpoint URL (default: http://loki-gateway.loki.svc.cluster.local)
+        service_name: Service name for Loki tags (default: from SERVICE_NAME env var or 'fastapi-app')
     
     Returns:
         Configured logger instance
     """
     if loki_url is None:
         loki_url = os.getenv("LOKI_URL", "http://loki-gateway.loki.svc.cluster.local")
+    
+    if service_name is None:
+        service_name = os.getenv("SERVICE_NAME", "fastapi-app")
     
     logger = logging.getLogger(name)
     logger.setLevel(logging.INFO)
@@ -51,7 +55,7 @@ def setup_loki_logger(name: str, loki_url: str = None):
         
         loki_handler = LokiLoggerHandler(
             url=f"{loki_url}/loki/api/v1/push",
-            tags={"app": "fastapi-app", "environment": os.getenv("ENVIRONMENT", "dev")},
+            tags={"app": service_name, "environment": os.getenv("ENVIRONMENT", "dev")},
             auth=None,  # Add auth if needed: (username, password)
             headers=headers,
         )
