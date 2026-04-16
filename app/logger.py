@@ -29,11 +29,20 @@ def setup_loki_logger(name: str, loki_url: str = None, service_name: str = None)
     logger = logging.getLogger(name)
     logger.setLevel(logging.INFO)
     
+    # Add service_name to all log records
+    class ServiceNameFilter(logging.Filter):
+        def filter(self, record):
+            record.service_name = service_name
+            return True
+    
+    service_filter = ServiceNameFilter()
+    
     # Console handler with JSON formatting
     console_handler = logging.StreamHandler()
     console_handler.setLevel(logging.INFO)
+    console_handler.addFilter(service_filter)
     json_formatter = jsonlogger.JsonFormatter(
-        fmt='%(timestamp)s %(level)s %(name)s %(message)s'
+        fmt='%(timestamp)s %(level)s %(name)s %(message)s %(service_name)s'
     )
     console_handler.setFormatter(json_formatter)
     logger.addHandler(console_handler)
@@ -55,11 +64,12 @@ def setup_loki_logger(name: str, loki_url: str = None, service_name: str = None)
         
         loki_handler = LokiLoggerHandler(
             url=f"{loki_url}/loki/api/v1/push",
-            tags={"app": service_name, "environment": os.getenv("ENVIRONMENT", "dev")},
+            tags={"app": service_name, "environment": os.getenv("ENVIRONMENT", "dev"), "service": service_name},
             auth=None,  # Add auth if needed: (username, password)
             headers=headers,
         )
         loki_handler.setLevel(logging.INFO)
+        loki_handler.addFilter(service_filter)
         loki_handler.setFormatter(json_formatter)
         logger.addHandler(loki_handler)
     except ImportError:
