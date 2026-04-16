@@ -2,6 +2,10 @@ import logging
 import os
 from logging.handlers import SocketHandler
 from pythonjsonlogger import jsonlogger
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 
 def setup_loki_logger(name: str, loki_url: str = None):
@@ -34,10 +38,22 @@ def setup_loki_logger(name: str, loki_url: str = None):
     try:
         from loki_logger_handler import LokiLoggerHandler
         
+        # Build headers
+        headers = {
+            "Content-Type": "application/json",
+            "X-Scope-OrgID": os.getenv("LOKI_ORG_ID", "default"),
+        }
+        
+        # Add authorization header if provided
+        loki_auth = os.getenv("LOKI_AUTH")
+        if loki_auth:
+            headers["Authorization"] = f"Bearer {loki_auth}"
+        
         loki_handler = LokiLoggerHandler(
             url=f"{loki_url}/loki/api/v1/push",
             tags={"app": "fastapi-app", "environment": os.getenv("ENVIRONMENT", "dev")},
             auth=None,  # Add auth if needed: (username, password)
+            headers=headers,
         )
         loki_handler.setLevel(logging.INFO)
         loki_handler.setFormatter(json_formatter)
