@@ -1,2 +1,4 @@
 fastapi
 uvicorn
+python-json-logger
+loki-logger-handler

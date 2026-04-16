@@ -1,8 +1,7 @@
-import logging
 from fastapi import FastAPI
+from app.logger import setup_loki_logger
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger("fastapi-app")
+logger = setup_loki_logger("fastapi-app")
 
 app = FastAPI()
 
