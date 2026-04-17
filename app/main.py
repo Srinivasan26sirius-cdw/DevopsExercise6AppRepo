@@ -1,17 +1,19 @@
 from fastapi import FastAPI
-from app.logger import setup_loki_logger
+from app.logger import create_logger
 
-logger = setup_loki_logger("fastapi-app")
+# Create logger for this service
+logger1 = create_logger("fastapi-service1")
+logger2 = create_logger("fastapi-service2")  
 
 app = FastAPI()
 
 @app.get("/")
 def read_root():
-    logger.info("Reading root endpoint")
+    logger1.info("Reading root endpoint")
     return {"message": "Hello from FastAPI!"}
 
 @app.get("/items/{item_id}")
 def get_item(item_id: int):
-    logger.info(f"Fetching item with ID: {item_id}")
+    logger2.info(f"Fetching item with ID: {item_id}")
     return {"item_id": item_id}
     
