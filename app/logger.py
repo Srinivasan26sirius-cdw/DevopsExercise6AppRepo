@@ -36,6 +36,8 @@ def create_logger(service_name: str):
             loki_handler.setFormatter(formatter)
             logger.addHandler(loki_handler)
 
+            logger.info("Loki logger initialized successfully")
+
         except Exception as e:
             logger.error(f"Loki init failed: {e}")
 
