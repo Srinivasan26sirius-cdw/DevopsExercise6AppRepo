@@ -1,7 +1,7 @@
 import logging
 import os
 
-ENV = os.getenv("ENV", "prod")
+ENV = os.getenv("ENV", "dev")
 
 formatter = logging.Formatter(
     '%(asctime)s - %(levelname)s - %(message)s'
@@ -21,7 +21,7 @@ def create_logger(service_name: str):
     logger.addHandler(console_handler)
 
     # Loki only in prod
-    if ENV == "prod":
+    if ENV == "dev":
         try:
             from logging_loki import LokiHandler
 

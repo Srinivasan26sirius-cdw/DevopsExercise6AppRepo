@@ -33,9 +33,6 @@ COPY --from=builder /root/.local /root/.local
 # Add local bin to PATH so uvicorn works
 ENV PATH=/root/.local/bin:$PATH
 
-# Optional environment variable for logger
-ENV ENV=prod
-
 # Copy application source code
 COPY . .
 
