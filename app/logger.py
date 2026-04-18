@@ -1,7 +1,7 @@
 import logging
 import os
 
-ENV = os.getenv("ENV", "prod")
+ENV = os.getenv("ENV", "dev")
 
 formatter = logging.Formatter(
     '%(asctime)s - %(levelname)s - %(message)s'
@@ -43,5 +43,5 @@ def create_logger(service_name: str):
 
 
 # Create two "services"
-#fast_api_logger1 = create_logger("fast-api-service1")
-#fast_api_logger2 = create_logger("fast-api-service2")
+fast_api_logger1 = create_logger("fast-api-service1")
+fast_api_logger2 = create_logger("fast-api-service2")
