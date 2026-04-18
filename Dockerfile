@@ -3,14 +3,16 @@ FROM python:3.11 AS builder
 
 WORKDIR /app
 
-# Install build dependencies
-RUN apt-get update && apt-get install -y build-essential \
+# Install system dependencies needed for building Python packages
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy dependency file
 COPY requirements.txt .
 
-# Install dependencies to user directory
+# Install Python dependencies into user directory
 RUN pip install --user --no-cache-dir -r requirements.txt
 
 
@@ -19,17 +21,26 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Copy installed dependencies from builder
+# Install minimal runtime tools for debugging + health checks
+# curl helps test Loki connectivity inside pod
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy installed Python packages from builder
 COPY --from=builder /root/.local /root/.local
 
-# Add to PATH so uvicorn works
+# Add local bin to PATH so uvicorn works
 ENV PATH=/root/.local/bin:$PATH
 
-# Copy application code
+# Optional environment variable for logger
+ENV ENV=prod
+
+# Copy application source code
 COPY . .
 
-# Expose port
+# Expose FastAPI port
 EXPOSE 8000
 
-# Run app
+# Start FastAPI app
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

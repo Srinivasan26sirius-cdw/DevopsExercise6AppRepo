@@ -1,7 +1,7 @@
 import logging
 import os
 
-ENV = os.getenv("ENV", "dev")
+ENV = os.getenv("ENV", "prod")
 
 formatter = logging.Formatter(
     '%(asctime)s - %(levelname)s - %(message)s'
@@ -40,8 +40,3 @@ def create_logger(service_name: str):
             logger.error(f"Loki init failed: {e}")
 
     return logger
-
-
-# Create two "services"
-fast_api_logger1 = create_logger("fast-api-service1")
-fast_api_logger2 = create_logger("fast-api-service2")
