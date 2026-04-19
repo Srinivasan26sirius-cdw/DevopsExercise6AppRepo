@@ -51,7 +51,7 @@ def create_logger(service_name: str):
     # Loki handler
     if ENV in ["dev", "prod"]:
         try:
-            from logging_loki import LokiHandler
+            from logging-loki import LokiHandler
 
             loki_handler = LokiHandler(
                 url=LOKI_URL,

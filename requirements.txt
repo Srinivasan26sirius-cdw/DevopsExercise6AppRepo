@@ -3,3 +3,4 @@ uvicorn
 python-json-logger
 loki-logger-handler
 python-dotenv
+logging-loki
